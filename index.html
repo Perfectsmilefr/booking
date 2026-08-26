@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfect Smile — Réservation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --creme:   #f5efe6;
+      --marron:  #3d2b1f;
+      --fonce:   #2a1e15;
+      --beige:   #e8d5b7;
+      --caramel: #c4a882;
+      --moyen:   #8a6a50;
+      --texte:   #6b4c35;
+    }
+
+    body {
+      background: var(--creme);
+      color: var(--marron);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--marron);
+      padding: 18px 24px;
+      text-align: center;
+    }
+    header .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      color: var(--beige);
+      letter-spacing: .15em;
+    }
+    header .sub {
+      font-size: 9px;
+      color: var(--moyen);
+      letter-spacing: .35em;
+      font-style: italic;
+      margin-top: 3px;
+    }
+
+    /* ── STEPPER ── */
+    .stepper {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      background: var(--fonce);
+      padding: 14px 0;
+    }
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      opacity: .35;
+      transition: opacity .3s;
+    }
+    .step-item.active { opacity: 1; }
+    .step-item.done   { opacity: .6; }
+    .step-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 1px solid var(--caramel);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      color: var(--caramel);
+      font-family: 'Montserrat', sans-serif;
+    }
+    .step-item.active .step-num {
+      background: var(--caramel);
+      color: var(--fonce);
+    }
+    .step-label {
+      font-size: 9px;
+      letter-spacing: .15em;
+      color: var(--beige);
+      text-transform: uppercase;
+    }
+    .step-sep {
+      width: 24px; height: 1px;
+      background: var(--texte);
+      align-self: center;
+    }
+
+    /* ── MAIN ── */
+    main {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 2px 16px rgba(61,43,31,.07);
+      padding: 28px 24px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-style: italic;
+      color: var(--marron);
+      margin-bottom: 6px;
+    }
+    .section-sub {
+      font-size: 10px;
+      color: var(--moyen);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+
+    /* ── PRESTATIONS ── */
+    .prestation-list { display: flex; flex-direction: column; gap: 12px; }
+    .prestation-card {
+      border: 1.5px solid var(--beige);
+      border-radius: 4px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .prestation-card:hover { border-color: var(--caramel); }
+    .prestation-card.selected {
+      border-color: var(--marron);
+      background: var(--creme);
+    }
+    .prestation-card.selected .prestation-name { color: var(--marron); }
+    .prestation-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      color: var(--texte);
+    }
+    .prestation-detail {
+      font-size: 10px;
+      color: var(--moyen);
+      margin-top: 4px;
+      line-height: 1.6;
+    }
+    .prestation-price {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      color: var(--caramel);
+      white-space: nowrap;
+      text-align: right;
+    }
+    .prestation-acompte {
+      font-size: 9px;
+      color: var(--moyen);
+      text-align: right;
+      margin-top: 2px;
+    }
+
+    /* ── FORMULAIRE ── */
+    .form-row { margin-bottom: 16px; }
+    label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--moyen);
+      margin-bottom: 6px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--beige);
+      border-radius: 3px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--marron);
+      background: #fff;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--caramel); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* ── CRÉNEAUX ── */
+    .slot-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .slot-btn {
+      padding: 10px 6px;
+      border: 1.5px solid var(--beige);
+      border-radius: 3px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--texte);
+      cursor: pointer;
+      background: #fff;
+      transition: border-color .2s, background .2s;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+    }
+    .slot-btn:hover { border-color: var(--caramel); }
+    .slot-btn.selected {
+      background: var(--marron);
+      border-color: var(--marron);
+      color: var(--beige);
+    }
+    .no-slots {
+      text-align: center;
+      color: var(--moyen);
+      font-size: 12px;
+      padding: 20px 0;
+      font-style: italic;
+    }
+
+    /* ── DATE PICKER ── */
+    .date-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .date-nav button {
+      background: none;
+      border: none;
+      color: var(--caramel);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 10px;
+    }
+    .date-nav .month-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      font-style: italic;
+      color: var(--marron);
+    }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+    }
+    .cal-day-header {
+      font-size: 9px;
+      color: var(--moyen);
+      letter-spacing: .1em;
+      padding-bottom: 6px;
+    }
+    .cal-day {
+      padding: 8px 4px;
+      border-radius: 3px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--marron);
+      transition: background .15s;
+    }
+    .cal-day:hover:not(.disabled):not(.empty) { background: var(--creme); }
+    .cal-day.has-slots { font-weight: 500; color: var(--marron); }
+    .cal-day.has-slots::after {
+      content: '';
+      display: block;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--caramel);
+      margin: 2px auto 0;
+    }
+    .cal-day.selected { background: var(--marron); color: var(--beige); }
+    .cal-day.selected::after { background: var(--beige); }
+    .cal-day.disabled { opacity: .3; cursor: default; }
+    .cal-day.empty { cursor: default; }
+
+    /* ── RECAP ── */
+    .recap-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--beige);
+      font-size: 13px;
+    }
+    .recap-line:last-child { border-bottom: none; }
+    .recap-line .lbl { color: var(--moyen); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+    .recap-line .val { color: var(--marron); font-family: 'Cormorant Garamond', serif; font-size: 16px; }
+    .recap-acompte {
+      background: var(--creme);
+      border-radius: 3px;
+      padding: 14px 16px;
+      margin-top: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .recap-acompte .lbl { font-size: 10px; color: var(--moyen); letter-spacing: .1em; text-transform: uppercase; }
+    .recap-acompte .amount {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      color: var(--caramel);
+    }
+    .policy-note {
+      font-size: 10px;
+      color: var(--moyen);
+      line-height: 1.7;
+      margin-top: 14px;
+      font-style: italic;
+    }
+
+    /* ── BOUTONS ── */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 3px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn:disabled { opacity: .4; cursor: default; }
+    .btn-primary { background: var(--marron); color: var(--beige); }
+    .btn-primary:hover:not(:disabled) { opacity: .85; }
+    .btn-back {
+      background: none;
+      color: var(--moyen);
+      font-size: 11px;
+      letter-spacing: .1em;
+      border: none;
+      cursor: pointer;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Montserrat', sans-serif;
+      padding: 0;
+    }
+    .btn-back:hover { color: var(--marron); }
+
+    /* ── SUCCESS / ERROR ── */
+    .success-box, .error-box {
+      text-align: center;
+      padding: 40px 24px;
+    }
+    .success-icon { font-size: 48px; margin-bottom: 16px; }
+    .success-box h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-style: italic;
+      color: var(--marron);
+      margin-bottom: 10px;
+    }
+    .success-box p { font-size: 12px; color: var(--moyen); line-height: 1.8; }
+
+    /* ── SPINNER ── */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid var(--beige);
+      border-top-color: var(--caramel);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--fonce);
+      text-align: center;
+      padding: 16px;
+      font-size: 9px;
+      color: var(--texte);
+      letter-spacing: .15em;
+    }
+    footer a { color: var(--moyen); text-decoration: none; }
+    footer a:hover { color: var(--caramel); }
+
+    /* ── HIDDEN ── */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Perfect Smile</div>
+  <div class="sub">soin dentaire esthétique</div>
+</header>
+
+<div class="stepper" id="stepper">
+  <div class="step-item active" data-step="1">
+    <div class="step-num">1</div>
+    <span class="step-label">Prestation</span>
+  </div>
+  <div class="step-sep"></div>
+  <div class="step-item" data-step="2">
+    <div class="step-num">2</div>
+    <span class="step-label">Coordonnées</span>
+  </div>
+  <div class="step-sep"></div>
+  <div class="step-item" data-step="3">
+    <div class="step-num">3</div>
+    <span class="step-label">Créneau</span>
+  </div>
+  <div class="step-sep"></div>
+  <div class="step-item" data-step="4">
+    <div class="step-num">4</div>
+    <span class="step-label">Récapitulatif</span>
+  </div>
+</div>
+
+<main>
+
+  <!-- ÉTAPE 1 — Prestation -->
+  <div id="step1">
+    <div class="card">
+      <div class="section-title">Choisissez votre soin</div>
+      <div class="section-sub">Soin dentaire esthétique · À domicile · Haute-Savoie</div>
+      <div class="prestation-list">
+        <div class="prestation-card" data-id="seance" data-prix="50" data-acompte="10" onclick="selectPrestation(this)">
+          <div>
+            <div class="prestation-name">Séance seule</div>
+            <div class="prestation-detail">Soin complet · 45 min · à domicile<br>Barrière gingivale · Produits CE 0,1%</div>
+          </div>
+          <div>
+            <div class="prestation-price">50 €</div>
+            <div class="prestation-acompte">Acompte 10 €</div>
+          </div>
+        </div>
+        <div class="prestation-card" data-id="seance-kit" data-prix="65" data-acompte="15" onclick="selectPrestation(this)">
+          <div>
+            <div class="prestation-name">Séance + Kit entretien</div>
+            <div class="prestation-detail">Soin complet · 45 min · à domicile<br>+ Stylo blanchissant · Bain de bouche · Pochette</div>
+          </div>
+          <div>
+            <div class="prestation-price">65 €</div>
+            <div class="prestation-acompte">Acompte 15 €</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="btn1" disabled onclick="goStep(2)">Continuer</button>
+  </div>
+
+  <!-- ÉTAPE 2 — Coordonnées -->
+  <div id="step2" class="hidden">
+    <div class="card">
+      <div class="section-title">Vos coordonnées</div>
+      <div class="section-sub">Ces informations nous permettent de confirmer votre rendez-vous</div>
+      <div class="form-row">
+        <label>Prénom *</label>
+        <input type="text" id="prenom" placeholder="Votre prénom">
+      </div>
+      <div class="form-row">
+        <label>Téléphone *</label>
+        <div style="display:flex;gap:8px;">
+          <select id="indicatif" style="width:110px;flex-shrink:0;">
+            <option value="+33">🇫🇷 +33</option>
+            <option value="+41">🇨🇭 +41</option>
+            <option value="+32">🇧🇪 +32</option>
+            <option value="">🌍 Autre</option>
+          </select>
+          <input type="tel" id="telephone" placeholder="6 00 00 00 00" style="flex:1;">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Email *</label>
+        <input type="email" id="email" placeholder="votre@email.com">
+      </div>
+      <div class="form-row">
+        <label>Commentaire (facultatif)</label>
+        <textarea id="commentaire" placeholder="Informations utiles, questions..."></textarea>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="goStep(3)">Continuer</button>
+    <button class="btn-back" onclick="goStep(1)">← Retour</button>
+  </div>
+
+  <!-- ÉTAPE 3 — Créneau -->
+  <div id="step3" class="hidden">
+    <div class="card">
+      <div class="section-title">Choisissez un créneau</div>
+      <div class="section-sub">Disponibilités en temps réel</div>
+
+      <!-- Calendrier -->
+      <div class="date-nav">
+        <button onclick="prevMonth()">←</button>
+        <span class="month-label" id="monthLabel"></span>
+        <button onclick="nextMonth()">→</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+
+      <!-- Créneaux du jour -->
+      <div id="slotsSection" style="margin-top:20px;" class="hidden">
+        <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--moyen);margin-bottom:10px;" id="slotsDateLabel"></div>
+        <div class="slot-grid" id="slotGrid"></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="btn3" disabled onclick="goStep(4)">Continuer</button>
+    <button class="btn-back" onclick="goStep(2)">← Retour</button>
+  </div>
+
+  <!-- ÉTAPE 4 — Récapitulatif -->
+  <div id="step4" class="hidden">
+    <div class="card">
+      <div class="section-title">Récapitulatif</div>
+      <div class="section-sub">Vérifiez votre réservation avant de payer</div>
+
+      <div class="recap-line">
+        <span class="lbl">Prestation</span>
+        <span class="val" id="recapPrestation"></span>
+      </div>
+      <div class="recap-line">
+        <span class="lbl">Date & heure</span>
+        <span class="val" id="recapCreneau"></span>
+      </div>
+      <div class="recap-line">
+        <span class="lbl">Nom</span>
+        <span class="val" id="recapNom"></span>
+      </div>
+      <div class="recap-line">
+        <span class="lbl">Prix total</span>
+        <span class="val" id="recapPrix"></span>
+      </div>
+
+      <div class="recap-acompte">
+        <div>
+          <div class="lbl">Acompte à régler maintenant</div>
+          <div style="font-size:10px;color:var(--moyen);margin-top:3px;">Reste dû sur place</div>
+        </div>
+        <div class="amount" id="recapAcompte"></div>
+      </div>
+
+      <p class="policy-note">
+        L'acompte est remboursable en cas d'annulation au moins 48h avant le rendez-vous. Au-delà, l'acompte reste dû.
+      </p>
+    </div>
+
+    <button class="btn btn-primary" id="btnPay" onclick="payerAcompte()">Payer mon acompte</button>
+    <button class="btn-back" onclick="goStep(3)">← Retour</button>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="stepSuccess" class="hidden">
+    <div class="card success-box">
+      <div class="success-icon">✓</div>
+      <h2>Réservation confirmée !</h2>
+      <p>Votre acompte a bien été reçu.<br>Vous allez recevoir un email de confirmation.<br><br>À très vite ! 🤍</p>
+    </div>
+    <button class="btn btn-primary" onclick="location.reload()">Nouvelle réservation</button>
+  </div>
+
+  <!-- CANCELLED -->
+  <div id="stepCancelled" class="hidden">
+    <div class="card error-box">
+      <div class="success-icon">✗</div>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--marron);margin-bottom:10px;">Paiement annulé</h2>
+      <p style="font-size:12px;color:var(--moyen);line-height:1.8;">Le paiement n'a pas été finalisé — votre créneau a été libéré.</p>
+    </div>
+    <button class="btn btn-primary" onclick="location.reload()">Réessayer</button>
+  </div>
+
+</main>
+
+<footer>
+  <span>@Perfect.smile74 · Soin dentaire esthétique</span><br>
+  <a href="mentions-legales.html">Mentions légales</a> · <a href="cgv.html">CGV</a> · <a href="confidentialite.html">Confidentialité</a>
+</footer>
+
+<script>
+  // ── CONFIG ──
+  const SUPABASE_URL  = 'https://qxkszhwllffjeyuzmpuq.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4a3N6aHdsbGZmamV5dXptcHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NjUyMTksImV4cCI6MjEwMzE0MTIxOX0.Mncnp-RfjklFkDak7Ud_TvCusOwNfbyLKiGY5ffPDZU';
+  const STRIPE_PK     = 'pk_live_51TdU0OCo1vntdAa9fVjtPGJkaTM8BJCmDM77BaXfQ03fcht3hWkf5WnVwpFnTincUk4L7ZaZ2njiLxMw2ShfCkeY00GGpCXqIW';
+
+  const stripe = Stripe(STRIPE_PK);
+
+  // ── STATE ──
+  let state = {
+    prestation: null,
+    prenom: '', telephone: '', email: '', commentaire: '',
+    date: null, slot: null, slotId: null,
+    reservationId: null
+  };
+
+  let calYear, calMonth, availableDates = {}, selectedDate = null;
+
+  // ── SUPABASE HELPERS ──
+  async function sbFetch(path, opts = {}) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      headers: {
+        apikey: SUPABASE_ANON,
+        Authorization: `Bearer ${SUPABASE_ANON}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+        ...opts.headers
+      },
+      ...opts
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  }
+
+  // ── ÉTAPE 1 ──
+  function selectPrestation(el) {
+    document.querySelectorAll('.prestation-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    state.prestation = {
+      id:      el.dataset.id,
+      nom:     el.querySelector('.prestation-name').textContent,
+      prix:    parseInt(el.dataset.prix),
+      acompte: parseInt(el.dataset.acompte)
+    };
+    document.getElementById('btn1').disabled = false;
+  }
+
+  // ── NAVIGATION ──
+  function goStep(n) {
+    if (n === 2) {
+      // Validation coords
+      const p = document.getElementById('prenom').value.trim();
+      const t = document.getElementById('telephone').value.trim();
+      const e = document.getElementById('email').value.trim();
+      if (n !== 2 || (document.getElementById('step2').classList.contains('hidden') === false)) {
+        if (!p || !t || !e) { alert('Merci de remplir tous les champs obligatoires.'); return; }
+      }
+    }
+    if (n === 2 && !document.getElementById('step2').classList.contains('hidden')) {
+      const p = document.getElementById('prenom').value.trim();
+      const t = document.getElementById('telephone').value.trim();
+      const e = document.getElementById('email').value.trim();
+      if (!p || !t || !e) { alert('Merci de remplir tous les champs obligatoires.'); return; }
+      state.prenom = p; state.telephone = t; state.email = e;
+      state.commentaire = document.getElementById('commentaire').value.trim();
+    }
+    if (n === 3) {
+      const p = document.getElementById('prenom').value.trim();
+      const t = document.getElementById('telephone').value.trim();
+      const e = document.getElementById('email').value.trim();
+      if (!p || !t || !e) { alert('Merci de remplir tous les champs obligatoires.'); return; }
+      const indicatif = document.getElementById('indicatif').value;
+      state.prenom = p; state.telephone = indicatif + ' ' + t; state.email = e;
+      state.commentaire = document.getElementById('commentaire').value.trim();
+      initCalendar();
+    }
+    if (n === 4) fillRecap();
+
+    [1,2,3,4].forEach(i => {
+      document.getElementById(`step${i}`).classList.toggle('hidden', i !== n);
+    });
+    updateStepper(n);
+    window.scrollTo(0,0);
+  }
+
+  function updateStepper(active) {
+    document.querySelectorAll('.step-item').forEach(el => {
+      const s = parseInt(el.dataset.step);
+      el.classList.toggle('active', s === active);
+      el.classList.toggle('done',   s < active);
+    });
+  }
+
+  // ── CRÉNEAUX PAR DÉFAUT (lun-ven) ──
+  const DEFAULT_SLOTS = ['09:00', '10:00', '14:00', '15:00', '16:00'];
+  let blockedDates = {}, bookedSlots = {};
+
+  // ── CALENDRIER ──
+  async function initCalendar() {
+    const now = new Date();
+    calYear  = now.getFullYear();
+    calMonth = now.getMonth();
+    await loadBlockedDates();
+    renderCalendar();
+  }
+
+  async function loadBlockedDates() {
+    try {
+      const blocked = await sbFetch('blocked_days?select=date');
+      blockedDates = {};
+      blocked.forEach(b => { blockedDates[b.date] = true; });
+
+      const reservations = await sbFetch('reservations?statut=in.(en_attente_paiement,confirme)&select=date_rdv,heure_rdv');
+      bookedSlots = {};
+      reservations.forEach(r => {
+        if (!bookedSlots[r.date_rdv]) bookedSlots[r.date_rdv] = [];
+        bookedSlots[r.date_rdv].push(r.heure_rdv.slice(0,5));
+      });
+
+      const partialBlocks = await sbFetch('blocked_slots?select=date,heure');
+      partialBlocks.forEach(s => {
+        if (!bookedSlots[s.date]) bookedSlots[s.date] = [];
+        bookedSlots[s.date].push(s.heure.slice(0,5));
+      });
+    } catch(e) { console.error(e); }
+  }
+
+  function getSlotsForDate(dateStr) {
+    if (blockedDates[dateStr]) return [];
+    const booked = bookedSlots[dateStr] || [];
+    return DEFAULT_SLOTS
+      .filter(h => !booked.includes(h))
+      .map((heure, i) => ({ heure, id: 'default-' + dateStr + '-' + i }));
+  }
+
+  function renderCalendar() {
+    const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    document.getElementById('monthLabel').textContent = `${months[calMonth]} ${calYear}`;
+
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+    ['Lu','Ma','Me','Je','Ve','Sa','Di'].forEach(d => {
+      const h = document.createElement('div');
+      h.className = 'cal-day-header';
+      h.textContent = d;
+      grid.appendChild(h);
+    });
+
+    const first = new Date(calYear, calMonth, 1);
+    const startDay = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    for (let i = 0; i < startDay; i++) {
+      const e = document.createElement('div'); e.className = 'cal-day empty'; grid.appendChild(e);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(calYear, calMonth, d);
+      const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const el = document.createElement('div');
+      el.className = 'cal-day';
+      el.textContent = d;
+      const dayOfWeek = date.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      const isPast = date < today;
+      const slots = getSlotsForDate(dateStr);
+      if (isPast || isWeekend || slots.length === 0) {
+        el.classList.add('disabled');
+      } else {
+        el.classList.add('has-slots');
+        el.onclick = () => selectDate(dateStr, el);
+      }
+      if (dateStr === selectedDate) el.classList.add('selected');
+      grid.appendChild(el);
+    }
+  }
+
+  function prevMonth() {
+    calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+  }
+  function nextMonth() {
+    calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+  }
+
+  function selectDate(dateStr, el) {
+    selectedDate = dateStr;
+    state.date = dateStr;
+    state.slot = null; state.slotId = null;
+    document.getElementById('btn3').disabled = true;
+    document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
+    el.classList.add('selected');
+
+    const slots = getSlotsForDate(dateStr);
+    const label = document.getElementById('slotsDateLabel');
+    const grid  = document.getElementById('slotGrid');
+    const section = document.getElementById('slotsSection');
+
+    const d = new Date(dateStr);
+    const jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    const mois  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    label.textContent = `${jours[d.getDay()]} ${d.getDate()} ${mois[d.getMonth()]}`;
+
+    grid.innerHTML = '';
+    if (slots.length === 0) {
+      grid.innerHTML = '<div class="no-slots" style="grid-column:1/-1">Aucun créneau ce jour</div>';
+    } else {
+      slots.sort((a,b) => a.heure.localeCompare(b.heure)).forEach(s => {
+        const btn = document.createElement('div');
+        btn.className = 'slot-btn';
+        btn.textContent = s.heure.slice(0,5);
+        btn.onclick = () => selectSlot(s, btn);
+        grid.appendChild(btn);
+      });
+    }
+    section.classList.remove('hidden');
+  }
+
+  function selectSlot(slot, btn) {
+    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.slot  = slot.heure.slice(0,5);
+    state.slotId = slot.id;
+    document.getElementById('btn3').disabled = false;
+  }
+
+  // ── RÉCAP ──
+  function fillRecap() {
+    const d = new Date(state.date);
+    const jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    const mois  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    document.getElementById('recapPrestation').textContent = state.prestation.nom;
+    document.getElementById('recapCreneau').textContent    = `${jours[d.getDay()]} ${d.getDate()} ${mois[d.getMonth()]} · ${state.slot}`;
+    document.getElementById('recapNom').textContent        = state.prenom;
+    document.getElementById('recapPrix').textContent       = `${state.prestation.prix} €`;
+    document.getElementById('recapAcompte').textContent    = `${state.prestation.acompte} €`;
+  }
+
+  // ── PAIEMENT ──
+  async function payerAcompte() {
+    const btn = document.getElementById('btnPay');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div>';
+
+    try {
+      // 1. Marquer le slot comme réservé provisoirement
+      await sbFetch(`slots?id=eq.${state.slotId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ statut: 'reserve_provisoire' })
+      });
+
+      // 2. Créer la réservation dans Supabase
+      const [resa] = await sbFetch('reservations', {
+        method: 'POST',
+        body: JSON.stringify({
+          prenom:      state.prenom,
+          telephone:   state.telephone,
+          email:       state.email,
+          commentaire: state.commentaire,
+          prestation:  state.prestation.nom,
+          prix_total:  state.prestation.prix,
+          acompte:     state.prestation.acompte,
+          date_rdv:    state.date,
+          heure_rdv:   state.slot,
+          slot_id:     state.slotId,
+          statut:      'en_attente_paiement'
+        })
+      });
+      state.reservationId = resa.id;
+
+      // 3. Créer session Stripe Checkout via edge function
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_ANON}`
+        },
+        body: JSON.stringify({
+          reservation_id: resa.id,
+          amount:         state.prestation.acompte * 100,
+          description:    `Acompte — ${state.prestation.nom}`,
+          customer_email: state.email,
+          success_url:    `${location.origin}${location.pathname}?success=1&id=${resa.id}`,
+          cancel_url:     `${location.origin}${location.pathname}?cancelled=1&id=${resa.id}`
+        })
+      });
+
+      const { url } = await res.json();
+      location.href = url;
+
+    } catch(e) {
+      console.error(e);
+      btn.disabled = false;
+      btn.textContent = 'Payer mon acompte';
+      alert('Une erreur est survenue. Merci de réessayer.');
+    }
+  }
+
+  // ── RETOUR STRIPE ──
+  function checkReturn() {
+    const params = new URLSearchParams(location.search);
+    if (params.get('success')) {
+      [1,2,3,4].forEach(i => document.getElementById(`step${i}`).classList.add('hidden'));
+      document.getElementById('stepper').classList.add('hidden');
+      document.getElementById('stepSuccess').classList.remove('hidden');
+    }
+    if (params.get('cancelled')) {
+      [1,2,3,4].forEach(i => document.getElementById(`step${i}`).classList.add('hidden'));
+      document.getElementById('stepper').classList.add('hidden');
+      document.getElementById('stepCancelled').classList.remove('hidden');
+    }
+  }
+
+  checkReturn();
+</script>
+</body>
+</html>
