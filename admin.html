@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfect Smile — Espace pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --creme: #f5efe6; --marron: #3d2b1f; --fonce: #2a1e15;
+      --beige: #e8d5b7; --caramel: #c4a882; --moyen: #8a6a50; --texte: #6b4c35;
+    }
+    body { background: var(--creme); font-family: 'Montserrat', sans-serif; font-weight: 300; color: var(--marron); min-height: 100vh; }
+
+    /* HEADER */
+    header { background: var(--marron); padding: 0 24px; display: flex; justify-content: space-between; align-items: center; height: 56px; }
+    .logo { font-family: 'Cormorant Garamond', serif; font-size: 17px; color: var(--beige); letter-spacing: .15em; }
+    .logo span { font-size: 9px; color: var(--moyen); letter-spacing: .3em; font-style: italic; display: block; margin-top: 1px; }
+    #btnLogout { background: none; border: 1px solid var(--texte); color: var(--moyen); padding: 6px 14px; border-radius: 3px; font-size: 10px; cursor: pointer; font-family: 'Montserrat', sans-serif; letter-spacing: .1em; transition: all .2s; }
+    #btnLogout:hover { border-color: var(--caramel); color: var(--caramel); }
+
+    /* LOGIN */
+    #loginScreen { max-width: 360px; margin: 80px auto; padding: 0 20px; }
+    #loginScreen h2 { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-style: italic; margin-bottom: 6px; }
+    #loginScreen p { font-size: 11px; color: var(--moyen); margin-bottom: 28px; }
+
+    /* TABS */
+    .tabs { background: var(--fonce); display: flex; gap: 0; padding: 0 24px; overflow-x: auto; }
+    .tab { padding: 14px 18px; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; cursor: pointer; color: var(--moyen); border-bottom: 2px solid transparent; white-space: nowrap; transition: all .2s; }
+    .tab:hover { color: var(--beige); }
+    .tab.active { color: var(--caramel); border-bottom-color: var(--caramel); }
+
+    /* MAIN */
+    #adminScreen { display: none; }
+    .tab-content { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    /* AGENDA SEMAINE */
+    .week-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .week-nav button { background: none; border: 1px solid var(--beige); color: var(--caramel); padding: 6px 14px; border-radius: 3px; cursor: pointer; font-size: 14px; }
+    .week-nav button:hover { border-color: var(--caramel); }
+    .week-label { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-style: italic; color: var(--marron); }
+
+    .week-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 24px; }
+    .day-col { background: #fff; border-radius: 4px; padding: 12px 10px; min-height: 120px; box-shadow: 0 1px 8px rgba(61,43,31,.06); }
+    .day-col-header { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--moyen); margin-bottom: 4px; }
+    .day-col-date { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--marron); margin-bottom: 10px; }
+    .day-col.today { border-top: 2px solid var(--caramel); }
+    .day-col.blocked { background: #faf5ef; opacity: .6; }
+    .resa-pill { background: var(--marron); color: var(--beige); border-radius: 3px; padding: 5px 8px; font-size: 10px; margin-bottom: 5px; }
+    .resa-pill .pill-time { color: var(--caramel); font-size: 9px; }
+    .empty-day { font-size: 10px; color: var(--beige); font-style: italic; text-align: center; padding: 20px 0; }
+
+    /* STATS */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--marron); border-radius: 4px; padding: 16px; text-align: center; }
+    .stat-num { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--caramel); }
+    .stat-lbl { font-size: 8px; letter-spacing: .15em; text-transform: uppercase; color: var(--moyen); margin-top: 4px; }
+
+    /* CARDS */
+    .card { background: #fff; border-radius: 4px; box-shadow: 0 2px 12px rgba(61,43,31,.06); padding: 22px; margin-bottom: 16px; }
+    .card-title { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-style: italic; color: var(--marron); margin-bottom: 14px; }
+    .card-sub { font-size: 10px; color: var(--moyen); margin-bottom: 16px; line-height: 1.6; }
+
+    /* FORM */
+    .form-row { margin-bottom: 12px; }
+    .form-inline { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-inline-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    label { display: block; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--moyen); margin-bottom: 5px; }
+    input, select, textarea { width: 100%; padding: 9px 12px; border: 1.5px solid var(--beige); border-radius: 3px; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 300; color: var(--marron); background: #fff; outline: none; transition: border-color .2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--caramel); }
+
+    /* BUTTONS */
+    .btn { padding: 10px 18px; border: none; border-radius: 3px; font-family: 'Montserrat', sans-serif; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; transition: opacity .2s; }
+    .btn-primary { background: var(--marron); color: var(--beige); }
+    .btn-primary:hover { opacity: .85; }
+    .btn-danger { background: #c0392b; color: #fff; }
+    .btn-sm { padding: 5px 11px; font-size: 9px; }
+
+    /* TABLE */
+    .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .tbl th { text-align: left; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--moyen); padding: 8px 10px; border-bottom: 1px solid var(--beige); }
+    .tbl td { padding: 10px 10px; border-bottom: 1px solid #faf5ef; vertical-align: middle; }
+    .tbl tr:last-child td { border-bottom: none; }
+
+    /* BADGES */
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 9px; }
+    .badge-confirme { background: var(--fonce); color: var(--beige); }
+    .badge-attente { background: #fdf0e0; color: var(--texte); }
+    .badge-annule { background: #fde8e8; color: #c0392b; }
+
+    /* RESA CARD */
+    .resa-card { border: 1px solid var(--beige); border-radius: 4px; padding: 14px; margin-bottom: 10px; }
+    .resa-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .resa-name { font-family: 'Cormorant Garamond', serif; font-size: 16px; }
+    .resa-info { font-size: 11px; color: var(--moyen); line-height: 1.8; }
+
+    .hidden { display: none !important; }
+    .empty-state { text-align: center; padding: 28px; color: var(--moyen); font-size: 12px; font-style: italic; }
+    .success-msg { background: #eaf5ea; color: #2d7a2d; padding: 10px 14px; border-radius: 3px; font-size: 11px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Perfect Smile <span>espace professionnel</span></div>
+  <button id="btnLogout" class="hidden" onclick="logout()">Déconnexion</button>
+</header>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <h2>Connexion</h2>
+  <p>Accès réservé à la praticienne</p>
+  <div class="form-row"><label>Email</label><input type="email" id="loginEmail" placeholder="votre@email.com"></div>
+  <div class="form-row"><label>Mot de passe</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="login()">Se connecter</button>
+  <p id="loginError" style="color:#c0392b;font-size:11px;margin-top:10px;" class="hidden">Email ou mot de passe incorrect.</p>
+</div>
+
+<!-- ADMIN -->
+<div id="adminScreen">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('agenda')">Agenda</div>
+    <div class="tab" onclick="showTab('horaires')">Horaires</div>
+    <div class="tab" onclick="showTab('reservations')">Réservations</div>
+    <div class="tab" onclick="showTab('reglages')">Réglages</div>
+  </div>
+
+  <!-- AGENDA -->
+  <div id="tab-agenda" class="tab-content">
+    <div class="week-nav">
+      <button onclick="prevWeek()">←</button>
+      <span class="week-label" id="weekLabel"></span>
+      <button onclick="nextWeek()">→</button>
+    </div>
+    <div class="stats">
+      <div class="stat-card"><div class="stat-num" id="statRdv">—</div><div class="stat-lbl">RDV cette semaine</div></div>
+      <div class="stat-card"><div class="stat-num" id="statCA">—</div><div class="stat-lbl">CA attendu</div></div>
+      <div class="stat-card"><div class="stat-num" id="statAcomptes">—</div><div class="stat-lbl">Acomptes reçus</div></div>
+    </div>
+    <div class="week-grid" id="weekGrid"></div>
+  </div>
+
+  <!-- HORAIRES -->
+  <div id="tab-horaires" class="tab-content hidden">
+    <div class="card">
+      <div class="card-title">Bloquer une journée entière</div>
+      <div class="card-sub">Ex : mercredi de la rentrée, vacances scolaires, RDV perso. Le jour sera totalement indisponible pour les clientes.</div>
+      <div class="form-inline">
+        <div class="form-row"><label>Date</label><input type="date" id="blockDate"></div>
+        <div class="form-row"><label>Motif (facultatif)</label><input type="text" id="blockMotif" placeholder="Vacances, école, perso..."></div>
+      </div>
+      <button class="btn btn-primary" onclick="addBlockedDay()">Bloquer cette journée</button>
+      <div id="msgBlockDay"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Bloquer un créneau précis</div>
+      <div class="card-sub">Ex : lundi 14h uniquement — le reste de la journée reste disponible.</div>
+      <div class="form-inline">
+        <div class="form-row"><label>Date</label><input type="date" id="blockSlotDate"></div>
+        <div class="form-row"><label>Heure</label>
+          <select id="blockSlotHeure">
+            <option value="09:00">09h00</option>
+            <option value="10:00">10h00</option>
+            <option value="14:00">14h00</option>
+            <option value="15:00">15h00</option>
+            <option value="16:00">16h00</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addBlockedSlot()">Bloquer ce créneau</button>
+      <div id="msgBlockSlot"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Journées bloquées</div>
+      <div id="blockedDaysList"><div class="empty-state">Chargement...</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Créneaux bloqués ponctuellement</div>
+      <div id="blockedSlotsList"><div class="empty-state">Chargement...</div></div>
+    </div>
+  </div>
+
+  <!-- RÉSERVATIONS -->
+  <div id="tab-reservations" class="tab-content hidden">
+    <div class="card">
+      <div class="card-title">Toutes les réservations</div>
+      <div id="resaList"><div class="empty-state">Chargement...</div></div>
+    </div>
+  </div>
+
+  <!-- RÉGLAGES -->
+  <div id="tab-reglages" class="tab-content hidden">
+    <div class="card">
+      <div class="card-title">Réglages généraux</div>
+      <div class="form-row"><label>Email de notification (vous)</label><input type="email" id="settingEmail" placeholder="perfect.smile.fr.ch@gmail.com"></div>
+      <div class="form-inline">
+        <div class="form-row"><label>Acompte séance seule (€)</label><input type="number" id="settingAcompte1" value="10"></div>
+        <div class="form-row"><label>Acompte séance + kit (€)</label><input type="number" id="settingAcompte2" value="15"></div>
+      </div>
+      <button class="btn btn-primary" onclick="saveSettings()">Enregistrer</button>
+      <div id="msgSettings"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Créneaux par défaut</div>
+      <div class="card-sub">Ces créneaux sont automatiquement disponibles tous les lundis au vendredis, sauf si vous les bloquez dans l'onglet Horaires.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+        <span style="background:var(--marron);color:var(--beige);padding:6px 14px;border-radius:3px;font-size:11px;">09h00</span>
+        <span style="background:var(--marron);color:var(--beige);padding:6px 14px;border-radius:3px;font-size:11px;">10h00</span>
+        <span style="background:var(--marron);color:var(--beige);padding:6px 14px;border-radius:3px;font-size:11px;">14h00</span>
+        <span style="background:var(--marron);color:var(--beige);padding:6px 14px;border-radius:3px;font-size:11px;">15h00</span>
+        <span style="background:var(--marron);color:var(--beige);padding:6px 14px;border-radius:3px;font-size:11px;">16h00</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL  = 'https://qxkszhwllffjeyuzmpuq.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4a3N6aHdsbGZmamV5dXptcHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NjUyMTksImV4cCI6MjEwMzE0MTIxOX0.Mncnp-RfjklFkDak7Ud_TvCusOwNfbyLKiGY5ffPDZU';
+  let authToken = null;
+  let currentWeekStart = getMonday(new Date());
+
+  async function sbFetch(path, opts = {}) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      headers: {
+        apikey: SUPABASE_ANON,
+        Authorization: `Bearer ${authToken || SUPABASE_ANON}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+        ...opts.headers
+      }, ...opts
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const txt = await res.text();
+    return txt ? JSON.parse(txt) : [];
+  }
+
+  // ── AUTH ──
+  async function login() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPassword').value;
+    document.getElementById('loginError').classList.add('hidden');
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_ANON, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error();
+      authToken = data.access_token;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminScreen').style.display = 'block';
+      document.getElementById('btnLogout').classList.remove('hidden');
+      loadAgenda();
+    } catch { document.getElementById('loginError').classList.remove('hidden'); }
+  }
+
+  function logout() {
+    authToken = null;
+    document.getElementById('loginScreen').style.display = 'block';
+    document.getElementById('adminScreen').style.display = 'none';
+    document.getElementById('btnLogout').classList.add('hidden');
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+  // ── TABS ──
+  function showTab(name) {
+    ['agenda','horaires','reservations','reglages'].forEach(t => {
+      document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== name);
+    });
+    document.querySelectorAll('.tab').forEach((el, i) => {
+      el.classList.toggle('active', ['agenda','horaires','reservations','reglages'][i] === name);
+    });
+    if (name === 'agenda')       loadAgenda();
+    if (name === 'horaires')     { loadBlockedDays(); loadBlockedSlots(); }
+    if (name === 'reservations') loadResas();
+  }
+
+  // ── AGENDA ──
+  function getMonday(d) {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    date.setDate(diff); date.setHours(0,0,0,0);
+    return date;
+  }
+  function prevWeek() { currentWeekStart.setDate(currentWeekStart.getDate() - 7); loadAgenda(); }
+  function nextWeek() { currentWeekStart.setDate(currentWeekStart.getDate() + 7); loadAgenda(); }
+
+  async function loadAgenda() {
+    const days = [];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(currentWeekStart);
+      d.setDate(d.getDate() + i);
+      days.push(d);
+    }
+    const start = days[0].toISOString().split('T')[0];
+    const end   = days[4].toISOString().split('T')[0];
+
+    const mois = ['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+    const firstDay = days[0];
+    const lastDay  = days[4];
+    document.getElementById('weekLabel').textContent =
+      `Semaine du ${firstDay.getDate()} ${mois[firstDay.getMonth()]} ${firstDay.getFullYear()}`;
+
+    try {
+      const [resas, blocked] = await Promise.all([
+        sbFetch(`reservations?date_rdv=gte.${start}&date_rdv=lte.${end}&statut=in.(en_attente_paiement,confirme)&order=date_rdv.asc,heure_rdv.asc`),
+        sbFetch(`blocked_days?date=gte.${start}&date=lte.${end}&select=date`)
+      ]);
+
+      const blockedSet = new Set(blocked.map(b => b.date));
+      const resaByDay = {};
+      resas.forEach(r => {
+        if (!resaByDay[r.date_rdv]) resaByDay[r.date_rdv] = [];
+        resaByDay[r.date_rdv].push(r);
+      });
+
+      // Stats
+      const totalCA = resas.reduce((s, r) => s + r.prix_total, 0);
+      const totalAcomptes = resas.reduce((s, r) => s + r.acompte, 0);
+      document.getElementById('statRdv').textContent = resas.length;
+      document.getElementById('statCA').textContent = totalCA + ' €';
+      document.getElementById('statAcomptes').textContent = totalAcomptes + ' €';
+
+      // Grille
+      const jours = ['Lun','Mar','Mer','Jeu','Ven'];
+      const today = new Date(); today.setHours(0,0,0,0);
+      const grid = document.getElementById('weekGrid');
+      grid.innerHTML = days.map((d, i) => {
+        const dateStr = d.toISOString().split('T')[0];
+        const isToday = d.getTime() === today.getTime();
+        const isBlocked = blockedSet.has(dateStr);
+        const dayResas = resaByDay[dateStr] || [];
+        return `<div class="day-col ${isToday ? 'today' : ''} ${isBlocked ? 'blocked' : ''}">
+          <div class="day-col-header">${jours[i]}</div>
+          <div class="day-col-date">${d.getDate()} ${mois[d.getMonth()]}</div>
+          ${isBlocked ? '<div class="empty-day">🔒 Bloqué</div>' :
+            dayResas.length === 0 ? '<div class="empty-day">Libre</div>' :
+            dayResas.map(r => `<div class="resa-pill">
+              <div class="pill-time">${r.heure_rdv ? r.heure_rdv.slice(0,5) : ''}</div>
+              <div>${r.prenom}</div>
+              <div style="font-size:9px;color:var(--caramel)">${r.prestation.includes('Kit') ? 'Séance + Kit' : 'Séance'}</div>
+            </div>`).join('')
+          }
+        </div>`;
+      }).join('');
+    } catch(e) { console.error(e); }
+  }
+
+  // ── HORAIRES ──
+  async function addBlockedDay() {
+    const date  = document.getElementById('blockDate').value;
+    const motif = document.getElementById('blockMotif').value;
+    const msg   = document.getElementById('msgBlockDay');
+    if (!date) { msg.innerHTML = '<div class="success-msg" style="background:#fde8e8;color:#c0392b">Merci de choisir une date.</div>'; return; }
+    try {
+      await sbFetch('blocked_days', { method: 'POST', body: JSON.stringify({ date, motif }) });
+      document.getElementById('blockDate').value = '';
+      document.getElementById('blockMotif').value = '';
+      msg.innerHTML = '<div class="success-msg">✓ Journée bloquée avec succès.</div>';
+      setTimeout(() => msg.innerHTML = '', 3000);
+      loadBlockedDays();
+    } catch { msg.innerHTML = '<div class="success-msg" style="background:#fde8e8;color:#c0392b">Erreur : ce jour est peut-être déjà bloqué.</div>'; }
+  }
+
+  async function loadBlockedDays() {
+    const el = document.getElementById('blockedDaysList');
+    try {
+      const days = await sbFetch('blocked_days?order=date.asc');
+      if (!days.length) { el.innerHTML = '<div class="empty-state">Aucune journée bloquée.</div>'; return; }
+      el.innerHTML = `<table class="tbl">
+        <thead><tr><th>Date</th><th>Motif</th><th></th></tr></thead>
+        <tbody>${days.map(d => `<tr>
+          <td>${formatDate(d.date)}</td>
+          <td>${d.motif || '—'}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteBlockedDay('${d.id}')">Débloquer</button></td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+    } catch { el.innerHTML = '<div class="empty-state">Erreur de chargement.</div>'; }
+  }
+
+  async function deleteBlockedDay(id) {
+    if (!confirm('Débloquer cette journée ?')) return;
+    await sbFetch(`blocked_days?id=eq.${id}`, { method: 'DELETE', headers: { Prefer: '' } });
+    loadBlockedDays();
+  }
+
+  async function addBlockedSlot() {
+    const date  = document.getElementById('blockSlotDate').value;
+    const heure = document.getElementById('blockSlotHeure').value;
+    const msg   = document.getElementById('msgBlockSlot');
+    if (!date) { msg.innerHTML = '<div class="success-msg" style="background:#fde8e8;color:#c0392b">Merci de choisir une date.</div>'; return; }
+    try {
+      await sbFetch('blocked_slots', { method: 'POST', body: JSON.stringify({ date, heure: heure + ':00' }) });
+      document.getElementById('blockSlotDate').value = '';
+      msg.innerHTML = '<div class="success-msg">✓ Créneau bloqué avec succès.</div>';
+      setTimeout(() => msg.innerHTML = '', 3000);
+      loadBlockedSlots();
+    } catch { msg.innerHTML = '<div class="success-msg" style="background:#fde8e8;color:#c0392b">Erreur : ce créneau est peut-être déjà bloqué.</div>'; }
+  }
+
+  async function loadBlockedSlots() {
+    const el = document.getElementById('blockedSlotsList');
+    try {
+      const slots = await sbFetch('blocked_slots?order=date.asc,heure.asc');
+      if (!slots.length) { el.innerHTML = '<div class="empty-state">Aucun créneau bloqué ponctuellement.</div>'; return; }
+      el.innerHTML = `<table class="tbl">
+        <thead><tr><th>Date</th><th>Heure</th><th></th></tr></thead>
+        <tbody>${slots.map(s => `<tr>
+          <td>${formatDate(s.date)}</td>
+          <td>${s.heure.slice(0,5)}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteBlockedSlot('${s.id}')">Débloquer</button></td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+    } catch { el.innerHTML = '<div class="empty-state">Erreur de chargement.</div>'; }
+  }
+
+  async function deleteBlockedSlot(id) {
+    if (!confirm('Débloquer ce créneau ?')) return;
+    await sbFetch(`blocked_slots?id=eq.${id}`, { method: 'DELETE', headers: { Prefer: '' } });
+    loadBlockedSlots();
+  }
+
+  // ── RÉSERVATIONS ──
+  async function loadResas() {
+    const el = document.getElementById('resaList');
+    try {
+      const resas = await sbFetch('reservations?order=date_rdv.desc,heure_rdv.desc');
+      if (!resas.length) { el.innerHTML = '<div class="empty-state">Aucune réservation pour le moment.</div>'; return; }
+      el.innerHTML = resas.map(r => `
+        <div class="resa-card">
+          <div class="resa-top">
+            <div class="resa-name">${r.prenom}</div>
+            <span class="badge ${r.statut === 'confirme' ? 'badge-confirme' : r.statut === 'annule' ? 'badge-annule' : 'badge-attente'}">
+              ${r.statut === 'confirme' ? 'Confirmé' : r.statut === 'annule' ? 'Annulé' : 'En attente'}
+            </span>
+          </div>
+          <div class="resa-info">
+            📅 ${formatDate(r.date_rdv)} · ${r.heure_rdv ? r.heure_rdv.slice(0,5) : ''}<br>
+            💆 ${r.prestation}<br>
+            💰 ${r.prix_total} € total · Acompte ${r.acompte} € · Reste dû ${r.prix_total - r.acompte} €<br>
+            📱 ${r.telephone} · ${r.email}
+            ${r.commentaire ? `<br>💬 ${r.commentaire}` : ''}
+          </div>
+        </div>`).join('');
+    } catch { el.innerHTML = '<div class="empty-state">Erreur de chargement.</div>'; }
+  }
+
+  // ── RÉGLAGES ──
+  function saveSettings() {
+    const msg = document.getElementById('msgSettings');
+    msg.innerHTML = '<div class="success-msg">✓ Réglages enregistrés.</div>';
+    setTimeout(() => msg.innerHTML = '', 3000);
+  }
+
+  // ── UTILS ──
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr + 'T00:00:00');
+    const jours = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+    const mois  = ['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+    return `${jours[d.getDay()]} ${d.getDate()} ${mois[d.getMonth()]} ${d.getFullYear()}`;
+  }
+</script>
+</body>
+</html>
