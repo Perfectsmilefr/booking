@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfect Smile — Espace pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --creme:   #f5efe6;
+      --marron:  #3d2b1f;
+      --fonce:   #2a1e15;
+      --beige:   #e8d5b7;
+      --caramel: #c4a882;
+      --moyen:   #8a6a50;
+      --texte:   #6b4c35;
+    }
+    body { background: var(--creme); font-family: 'Montserrat', sans-serif; font-weight: 300; color: var(--marron); min-height: 100vh; }
+
+    /* HEADER */
+    header { background: var(--marron); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+    header .logo { font-family: 'Cormorant Garamond', serif; font-size: 16px; color: var(--beige); letter-spacing: .15em; }
+    header .sub { font-size: 8px; color: var(--moyen); letter-spacing: .3em; font-style: italic; }
+    #btnLogout { background: none; border: 1px solid var(--texte); color: var(--moyen); padding: 6px 14px; border-radius: 3px; font-size: 10px; cursor: pointer; font-family: 'Montserrat', sans-serif; letter-spacing: .1em; }
+    #btnLogout:hover { border-color: var(--caramel); color: var(--caramel); }
+
+    /* LOGIN */
+    #loginScreen { max-width: 360px; margin: 60px auto; padding: 0 20px; }
+    #loginScreen h2 { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-style: italic; margin-bottom: 24px; }
+
+    /* MAIN */
+    #adminScreen { max-width: 860px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--beige); }
+    .tab { padding: 10px 18px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; color: var(--moyen); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .tab.active { color: var(--marron); border-bottom-color: var(--caramel); font-weight: 500; }
+
+    /* CARDS */
+    .card { background: #fff; border-radius: 4px; box-shadow: 0 2px 12px rgba(61,43,31,.06); padding: 24px; margin-bottom: 20px; }
+    .card-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-style: italic; margin-bottom: 16px; color: var(--marron); }
+
+    /* FORM */
+    .form-row { margin-bottom: 14px; }
+    label { display: block; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--moyen); margin-bottom: 5px; }
+    input, select { width: 100%; padding: 10px 13px; border: 1.5px solid var(--beige); border-radius: 3px; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 300; color: var(--marron); background: #fff; outline: none; }
+    input:focus, select:focus { border-color: var(--caramel); }
+
+    /* BUTTONS */
+    .btn { padding: 11px 20px; border: none; border-radius: 3px; font-family: 'Montserrat', sans-serif; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
+    .btn-primary { background: var(--marron); color: var(--beige); }
+    .btn-primary:hover { opacity: .85; }
+    .btn-danger { background: #c0392b; color: #fff; padding: 6px 12px; font-size: 9px; }
+    .btn-sm { padding: 6px 14px; font-size: 9px; }
+
+    /* SLOTS TABLE */
+    .slot-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .slot-table th { text-align: left; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--moyen); padding: 8px 10px; border-bottom: 1px solid var(--beige); }
+    .slot-table td { padding: 10px 10px; border-bottom: 1px solid #faf5ef; vertical-align: middle; }
+    .slot-table tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 9px; letter-spacing: .08em; }
+    .badge-dispo { background: #eaf5ea; color: #2d7a2d; }
+    .badge-reserve { background: #fdf0e0; color: var(--texte); }
+    .badge-confirme { background: var(--fonce); color: var(--beige); }
+
+    /* RESERVATIONS */
+    .resa-card { border: 1px solid var(--beige); border-radius: 4px; padding: 16px; margin-bottom: 12px; }
+    .resa-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .resa-name { font-family: 'Cormorant Garamond', serif; font-size: 16px; }
+    .resa-detail { font-size: 11px; color: var(--moyen); line-height: 1.7; }
+
+    .hidden { display: none !important; }
+    .empty-state { text-align: center; padding: 30px; color: var(--moyen); font-size: 12px; font-style: italic; }
+
+    /* inline-flex pour la grille date+heure */
+    .inline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Perfect Smile</div>
+    <div class="sub">espace professionnel</div>
+  </div>
+  <button id="btnLogout" class="hidden" onclick="logout()">Déconnexion</button>
+</header>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <h2>Connexion</h2>
+  <div class="form-row">
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="votre@email.com">
+  </div>
+  <div class="form-row">
+    <label>Mot de passe</label>
+    <input type="password" id="loginPassword" placeholder="••••••••">
+  </div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="login()">Se connecter</button>
+  <p id="loginError" style="color:#c0392b;font-size:11px;margin-top:10px;" class="hidden"></p>
+</div>
+
+<!-- ADMIN -->
+<div id="adminScreen" class="hidden">
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('agenda')">Agenda</div>
+    <div class="tab" onclick="showTab('creneaux')">Créneaux</div>
+    <div class="tab" onclick="showTab('reservations')">Réservations</div>
+  </div>
+
+  <!-- AGENDA -->
+  <div id="tab-agenda">
+    <div class="card">
+      <div class="card-title">Réservations à venir</div>
+      <div id="agendaList"><div class="empty-state">Chargement...</div></div>
+    </div>
+  </div>
+
+  <!-- CRÉNEAUX -->
+  <div id="tab-creneaux" class="hidden">
+    <div class="card">
+      <div class="card-title">Ajouter un créneau</div>
+      <div class="inline-grid">
+        <div class="form-row">
+          <label>Date</label>
+          <input type="date" id="newDate">
+        </div>
+        <div class="form-row">
+          <label>Heure</label>
+          <input type="time" id="newHeure">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addSlot()">Ajouter ce créneau</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Créneaux disponibles</div>
+      <div id="slotsList"><div class="empty-state">Chargement...</div></div>
+    </div>
+  </div>
+
+  <!-- RÉSERVATIONS -->
+  <div id="tab-reservations" class="hidden">
+    <div class="card">
+      <div class="card-title">Toutes les réservations</div>
+      <div id="resaList"><div class="empty-state">Chargement...</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const SUPABASE_URL  = 'https://qxkszhwllffjeyuzmpuq.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4a3N6aHdsbGZmamV5dXptcHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NjUyMTksImV4cCI6MjEwMzE0MTIxOX0.Mncnp-RfjklFkDak7Ud_TvCusOwNfbyLKiGY5ffPDZU';
+
+  let authToken = null;
+
+  async function sbFetch(path, opts = {}) {
+    const headers = {
+      apikey: SUPABASE_ANON,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+      ...opts.headers
+    };
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
+    else headers.Authorization = `Bearer ${SUPABASE_ANON}`;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { ...opts, headers });
+    if (!res.ok) throw new Error(await res.text());
+    const txt = await res.text();
+    return txt ? JSON.parse(txt) : [];
+  }
+
+  async function login() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPassword').value;
+    const err   = document.getElementById('loginError');
+    err.classList.add('hidden');
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_ANON, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error_description || data.error);
+      authToken = data.access_token;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('adminScreen').classList.remove('hidden');
+      document.getElementById('btnLogout').classList.remove('hidden');
+      loadAgenda();
+    } catch(e) {
+      err.textContent = 'Email ou mot de passe incorrect.';
+      err.classList.remove('hidden');
+    }
+  }
+
+  function logout() {
+    authToken = null;
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('adminScreen').classList.add('hidden');
+    document.getElementById('btnLogout').classList.add('hidden');
+  }
+
+  function showTab(name) {
+    ['agenda','creneaux','reservations'].forEach(t => {
+      document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== name);
+    });
+    document.querySelectorAll('.tab').forEach((el, i) => {
+      el.classList.toggle('active', ['agenda','creneaux','reservations'][i] === name);
+    });
+    if (name === 'creneaux')     loadSlots();
+    if (name === 'reservations') loadResas();
+    if (name === 'agenda')       loadAgenda();
+  }
+
+  // ── AGENDA ──
+  async function loadAgenda() {
+    const el = document.getElementById('agendaList');
+    try {
+      const resas = await sbFetch(`reservations?statut=eq.confirme&order=date_rdv.asc,heure_rdv.asc`);
+      if (!resas.length) { el.innerHTML = '<div class="empty-state">Aucun rendez-vous confirmé à venir.</div>'; return; }
+      el.innerHTML = resas.map(r => renderResa(r)).join('');
+    } catch(e) { el.innerHTML = '<div class="empty-state">Erreur de chargement.</div>'; }
+  }
+
+  // ── CRÉNEAUX ──
+  async function loadSlots() {
+    const el = document.getElementById('slotsList');
+    try {
+      const slots = await sbFetch(`slots?statut=eq.disponible&order=date.asc,heure.asc`);
+      if (!slots.length) { el.innerHTML = '<div class="empty-state">Aucun créneau disponible. Ajoutez-en ci-dessus.</div>'; return; }
+      el.innerHTML = `<table class="slot-table">
+        <thead><tr><th>Date</th><th>Heure</th><th>Statut</th><th></th></tr></thead>
+        <tbody>${slots.map(s => `
+          <tr>
+            <td>${formatDate(s.date)}</td>
+            <td>${s.heure.slice(0,5)}</td>
+            <td><span class="badge badge-dispo">Disponible</span></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteSlot('${s.id}')">Supprimer</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+    } catch(e) { el.innerHTML = '<div class="empty-state">Erreur de chargement.</div>'; }
+  }
+
+  async function addSlot() {
+    const date  = document.getElementById('newDate').value;
+    const heure = document.getElementById('newHeure').value;
+    if (!date || !heure) { alert('Merci de renseigner une date et une heure.'); return; }
+    try {
+      await sbFetch('slots', { method: 'POST', body: JSON.stringify({ date, heure: heure + ':00', statut: 'disponible' }) });
+      document.getElementById('newDate').value = '';
+      document.getElementById('newHeure').value = '';
+      loadSlots();
+    } catch(e) { alert('Erreur lors de l\'ajout du créneau.'); }
+  }
+
+  async function deleteSlot(id) {
+    if (!confirm('Supprimer ce créneau ?')) return;
+    try {
+      await sbFetch(`slots?id=eq.${id}`, { method: 'DELETE', headers: { Prefer: '' } });
+      loadSlots();
+    } catch(e) { alert('Erreur lors de la suppression.'); }
+  }
+
+  // ── RÉSERVATIONS ──
+  async function loadResas() {
+    const el = document.getElementById('resaList');
+    try {
+      const resas = await sbFetch(`reservations?order=date_rdv.desc,heure_rdv.desc`);
+      if (!resas.length) { el.innerHTML = '<div class="empty-state">Aucune réservation pour le moment.</div>'; return; }
+      el.innerHTML = resas.map(r => renderResa(r, true)).join('');
+    } catch(e) { el.innerHTML = '<div class="empty-state">Erreur de chargement.</div>'; }
+  }
+
+  function renderResa(r, showAll = false) {
+    const statutClass = r.statut === 'confirme' ? 'badge-confirme' : 'badge-reserve';
+    const statutLabel = r.statut === 'confirme' ? 'Confirmé' : r.statut === 'en_attente_paiement' ? 'En attente' : r.statut;
+    return `<div class="resa-card">
+      <div class="resa-header">
+        <div class="resa-name">${r.prenom}</div>
+        <span class="badge ${statutClass}">${statutLabel}</span>
+      </div>
+      <div class="resa-detail">
+        📅 ${formatDate(r.date_rdv)} · ${r.heure_rdv ? r.heure_rdv.slice(0,5) : ''}<br>
+        💆 ${r.prestation}<br>
+        💰 ${r.prix_total} € total · Acompte ${r.acompte} € payé<br>
+        📱 ${r.telephone} · ${r.email}
+        ${r.commentaire ? `<br>💬 ${r.commentaire}` : ''}
+      </div>
+    </div>`;
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const jours = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+    const mois  = ['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+    return `${jours[d.getDay()]} ${d.getDate()} ${mois[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  // Init
+  document.getElementById('loginEmail').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+</script>
+</body>
+</html>
